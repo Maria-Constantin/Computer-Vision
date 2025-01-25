@@ -1,0 +1,49 @@
+# MATLAB specific files
+*.asv                # Autosave files
+*.m~                 # Backup files for MATLAB scripts
+*.mlx~               # Backup files for MATLAB live scripts
+*.slx~               # Backup files for Simulink models
+*.mlappinstall       # MATLAB app installation files
+*.mex*               # Compiled binary files for MATLAB
+*.fig                # GUI figures
+*.p                  # MATLAB protected files
+*.log                # MATLAB log files
+
+# Simulink specific files
+*.slxc               # Simulink cache files
+*.slxp               # Simulink project files
+*.mdl.autosave       # Autosave files for Simulink models
+*.mdl.r201*          # Compatibility files for Simulink models
+*.simstate           # Simulink simulation state files
+*.slx.autosave       # Autosave files for Simulink models
+
+# MATLAB Editor files
+*.asv                # Autosave files for the MATLAB Editor
+*.m.lock             # Lock files for MATLAB scripts
+
+# User-specific settings
+*.prj                # MATLAB project files
+*.matlab             # MATLAB preferences
+*.mlsettings         # MATLAB settings files
+
+# Other temporary or build artifacts
+*.tmw                # Temporary MATLAB files
+*.bak                # Backup files
+*.out                # Output files
+*.exe                # Executable files
+*.dll                # Dynamic link libraries
+*.obj                # Object files
+*.user               # User-specific files
+*.log                # Log files
+*.tmp                # Temporary files
+
+# Ignore specific directories
+slprj/               # Simulink project directories
+work/                # MATLAB default working directory
+codegen/             # MATLAB code generation directory
+mcrCache*/           # MATLAB Compiler Runtime cache
+
+images_256/
+labels_256/
+frames/
+*.pgm

@@ -1,0 +1,66 @@
+% Define dataset directories
+imagesDir = 'images_256'; % Path to image files
+labelsDir = 'labels_256'; % Path to label files
+
+% Get list of all image and label files
+imageFiles = dir(fullfile(imagesDir, '*.jpg')); % All image files
+labelFiles = dir(fullfile(labelsDir, '*.png')); % All label files
+
+% Create a mapping of image filenames to corresponding label filenames
+imageToLabelMap = containers.Map();
+for k = 1:numel(labelFiles)
+    labelName = labelFiles(k).name;
+    baseName = erase(labelName, '.png');
+    imageToLabelMap(baseName) = fullfile(labelsDir, labelName); % Map label path
+end
+
+% Filter the `imageDatastore` to only include images with corresponding labels
+imageNames = arrayfun(@(x) erase(x.name, '.jpg'), imageFiles, 'UniformOutput', false); % Get image names
+validIndices = find(isKey(imageToLabelMap, imageNames)); % Only valid indices
+
+% Create the filtered `imageDatastore`
+filteredImgDS = subset(imageDatastore(imagesDir, 'FileExtensions', {'.jpg', '.png'}), validIndices);
+
+% Get the corresponding labels
+filteredLabelPaths = values(imageToLabelMap, imageNames(validIndices)); % Corresponding label paths
+
+% Create the filtered `pixelLabelDatastore`
+classes = ["background", "flower"]; % Define classes
+pixelLabelIDs = [3, 1]; % Corresponding pixel label IDs for classes
+
+filteredLabelDS = pixelLabelDatastore(filteredLabelPaths, classes, pixelLabelIDs);
+
+% Ensure `filteredImgDS` and `filteredLabelDS` have the same number of files
+if numel(filteredImgDS.Files) ~= numel(filteredLabelDS.Files)
+    error('Image and label datastores must have the same number of files.');
+end
+
+% Create `pixelLabelImageDatastore` to combine the filtered datastores
+combinedDS = pixelLabelImageDatastore(filteredImgDS, filteredLabelDS); % Combine datastores
+
+% Define U-Net architecture
+inputSize = [256, 256, 3]; % Input size for RGB images
+numClasses = 2; % Number of output classes (background and flower)
+
+unetModel = unetLayers(inputSize, numClasses, 'ConvolutionPadding', 'same', ...
+    'EncoderDepth', 4, ...
+    'NumFirstEncoderFilters', 64); % U-Net architecture
+
+% Training options
+options = trainingOptions('adam', ...
+    'MaxEpochs', 10, ...
+    'MiniBatchSize', 8, ...
+    'Shuffle', 'every-epoch', ...
+    'Plots', 'training-progress', ...
+    'Verbose', false);
+
+% Train the U-Net model with the filtered datastores
+segNet = trainNetwork(combinedDS, unetModel, options);
+
+% Save the trained model
+save('segmentationExist.mat', 'net');
+
+% Evaluate the trained U-Net model
+predictions = semanticseg(filteredImgDS, segNet); % Get predictions from the trained model
+accuracy = evaluateSemanticSegmentation(predictions, filteredLabelDS); % Evaluate model performance
+disp("Segmentation accuracy: " + accuracy.DataSetMetrics.GlobalAccuracy);
